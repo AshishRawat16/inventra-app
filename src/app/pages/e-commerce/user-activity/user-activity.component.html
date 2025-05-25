@@ -1,14 +1,14 @@
 <nb-card size="medium">
 
   <nb-card-header>
-    <span>Recent Stock Updates</span>
+    <span>Recent Alert Notification</span>
     <!-- <nb-select [selected]="type" (selectedChange)="getUserActivity($event); type = $event">
       <nb-option *ngFor="let t of types" [value]="t">{{ t }}</nb-option>
     </nb-select> -->
   </nb-card-header>
 
   <nb-list class="user-activity-list">
-    <nb-list-item *ngFor="let item of userActivity">
+    <!-- <nb-list-item *ngFor="let item of userActivity">
 
       <div class="visited-date">
         {{ item.date }}
@@ -27,6 +27,25 @@
         </div>
       </div>
 
+    </nb-list-item> -->
+    <nb-list-item *ngFor="let item of notificationList">
+      <div class="visited-pages-count">
+        <div class="caption">Alert Type</div>
+        <div class="value">{{ item.alertruletype }}</div>
+      </div>
+
+      <!-- <div class="visited-percentages">
+        <div class="caption">Message</div>
+        <div class="value">{{ item.message }}</div>
+      </div> -->
+      <div class="visited-pages-count">
+        <div class="caption">Channel</div>
+        <div class="value">{{ item.channel }}</div>
+      </div>
+      <div class="visited-pages-count">
+        <div class="caption">Sent At</div>
+        <div class="value">{{ item.sentat }}</div>
+      </div>
     </nb-list-item>
   </nb-list>
 

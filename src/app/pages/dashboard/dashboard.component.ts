@@ -18,15 +18,19 @@ interface CardSettings {
   styleUrls: ['./dashboard.component.scss'],
   templateUrl: './dashboard.component.html',
 })
-export class DashboardComponent implements OnDestroy {
+export class DashboardComponent implements OnInit,OnDestroy {
 
   private alive = true;
+  apiUrl:string = "https://localhost:7228/";
   socketSubscription: Subscription = new Subscription();
   solarValue: number;
   lowStockValue: string ='0';
   overStockValue: string ='0';
-  expiryValue: string ='0';
-
+  expiringValue: string ='0';
+  totalProductsValue: string ='0';
+  outOfStockValue: string ='0';
+  expiredValue: string ='0';
+  notificationList: any=[];
   lightCard: CardSettings = {
     title: 'Low stock items',
     iconClass: 'nb-arrow-thin-down',
@@ -88,26 +92,37 @@ export class DashboardComponent implements OnDestroy {
       });
   }
 
-  ngOnInit(){
+    ngOnInit(){
     this.getDashboardData();
-    this.socketSubscription = this.websocketService.connect('ws://your-server-url')
-      .subscribe({
-        next: (data: any) => {
-          this.lowStockValue = data?.lowStock;
-          this.overStockValue=data?.overStock;
-          this.expiryValue = data?.expiryStock;
-        },
-        error: (err) => {
-          console.error('WebSocket Error:', err);
-        }
-      });
+    this.getNotificationList();
+    // this.socketSubscription = this.websocketService.connect('ws://your-server-url')
+    //   .subscribe({
+    //     next: (data: any) => {
+    //       this.lowStockValue = data?.lowStock;
+    //       this.overStockValue=data?.overStock;
+    //       this.expiryValue = data?.expiryStock;
+    //     },
+    //     error: (err) => {
+    //       console.error('WebSocket Error:', err);
+    //     }
+    //   });
   }
 
   getDashboardData(){
-    this.http.get('/api/metrics-data').subscribe((data:any) => {
-          this.lowStockValue = data?.lowStock;
-          this.overStockValue=data?.overStock;
-          this.expiryValue = data?.expiryStock;
+    this.http.get(this.apiUrl + 'api/inventory/dashboard-metrics').subscribe((data:any) => {
+          this.lowStockValue = data?.lowStockItems;
+          this.overStockValue=data?.overStockItems;
+          this.outOfStockValue=data?.outOfStockItems;
+          this.totalProductsValue = data?.totalProducts;
+          this.expiringValue = data?.expiringItems;
+          this.expiredValue = data?.expiredItems;
+    });
+  }
+  getNotificationList(){
+    this.http.get(this.apiUrl + 'api/inventory/notification-list').subscribe((data:any) => {
+          if(data){
+            this.notificationList = data;
+          }
     });
   }
   ngOnDestroy() {

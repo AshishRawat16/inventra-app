@@ -1,11 +1,26 @@
 <div class="row">
   <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Total Products" type="info" [total]="totalProductsValue">
+      <i ngClass="nb-e-commerce"></i>
+    </ngx-status-card>
+  </div>
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Out of Stock Items" type="danger" [total]="outOfStockValue">
+      <i ngClass="nb-danger"></i>
+    </ngx-status-card>
+  </div>
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Expired Items" type="danger" [total]="expiredValue">
+      <i ngClass="nb-danger"></i>
+    </ngx-status-card>
+  </div>
+  <div class="col-xxxl-3 col-md-6">
     <ngx-status-card title="Low Stock Items" type="warning" [total]="lowStockValue">
       <i ngClass="nb-arrow-thin-down"></i>
     </ngx-status-card>
   </div>
   <div class="col-xxxl-3 col-md-6">
-    <ngx-status-card title="Out of Stock Items" type="danger" [total]="expiryValue">
+    <ngx-status-card title="Expiring Items" type="warning" [total]="expiringValue">
       <i ngClass="nb-danger"></i>
     </ngx-status-card>
   </div>
@@ -14,21 +29,10 @@
       <i ngClass="nb-paper-plane"></i>
     </ngx-status-card>
   </div>
-  <div class="col-xxxl-3 col-md-6">
-    <ngx-status-card title="Expiring Items" type="warning" [total]="expiryValue">
-      <i ngClass="nb-danger"></i>
-    </ngx-status-card>
-  </div>
 </div>
+
 <div class="row">
-  <div class="col-xxxl-3 col-md-6">
-    <ngx-status-card title="Total Products" type="info" [total]="lowStockValue">
-      <i ngClass="nb-e-commerce"></i>
-    </ngx-status-card>
-  </div>
-</div>
-<div class="row">
-  <div class="col-xxl-5">
+  <div class="col-xxxl-6 col-md-6">
     <ngx-user-activity></ngx-user-activity>
   </div>
 </div>

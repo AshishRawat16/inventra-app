@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { LocalDataSource } from 'ng2-smart-table';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -16,8 +16,8 @@ import { SmartTableData } from '../../../@core/data/smart-table';
   templateUrl: './smart-table.component.html',
   styleUrls: ['./smart-table.component.scss'],
 })
-export class SmartTableComponent {
-
+export class SmartTableComponent implements OnInit{
+ apiUrl:string = "https://localhost:7228/";
   settings = {
     add: {
       addButtonContent: '<i class="nb-plus"></i>',
@@ -37,36 +37,56 @@ export class SmartTableComponent {
       confirmDelete: true,
     },
     columns: {
-      batchId: {
-        title: 'Batch Id',
+      productID: {
+        title: 'Product Id',
+        type: 'string',
+        editable: false,
+        hide: true
+      },
+      warehouseID:{
+        title: 'Warehouse Id',
         type: 'string',
         editable: false,
         hide: true
       },
       productName: {
         title: 'Product Name',
-        type: 'string',
-        editable: false
+        type: 'text',
+        editable: false,
+        editor:{
+          type : 'list',
+          config:{
+            list:[]
+          }
+        }
       },
       category: {
         title: 'Category',
         type: 'string',
-        editable: false
+        editable: false,
+        addable: false,
+        editor:{
+          type : 'list',
+          config:{
+            list:[]
+          }
+        }
       },
       quantity: {
         title: 'Quantity',
         type: 'number',
         editable: true
       },
-      status: {
-        title: 'Status',
-        type: 'string',
-        editable: false
-      },
-      warehouse: {
+      warehouseName: {
         title: 'Warehouse Name',
         type: 'string',
-        editable: false
+        editable: false,
+        editor:{
+          type : 'list',
+          config:{
+            list:[]
+          }
+        }
       }
     },
   };
@@ -78,17 +98,21 @@ export class SmartTableComponent {
   hasIcon = true;
   position: NbGlobalPosition = NbGlobalPhysicalPosition.TOP_RIGHT;
   preventDuplicates = false;
+  productList:any = [];
+  categoryList:any = [];
+  warehouseList:any = [];
   constructor(private service: SmartTableData, private http : HttpClient, private toastrService: NbToastrService) {
-    const data = this.service.getData();
-    this.source.load(data);
+    //const data = this.service.getData();
+    //this.source.load(data);
   }
 
   onDeleteConfirm(event): void {
     if (window.confirm('Are you sure you want to delete?')) {
       event.confirm.resolve();
        const data = event.data;
-      this.http.post('/api/delete-inventory', {'batchId' : data.batchId}).subscribe(resp =>{
-        this.showToast('success','Success', "Record deleted successfully." )
+      this.http.post(this.apiUrl + 'api/inventory/delete-inventory', data).subscribe(resp =>{
+        this.showToast('success','Success', "Record deleted successfully." );
+        this.getInventoryList();
       });
     } else {
       event.confirm.reject();
@@ -107,27 +131,70 @@ export class SmartTableComponent {
       //display alert
       return;
     }
-    this.http.post('/api/update-inventory', {'batchId' : updatedData.batchId, 'quantity' : updatedData.quantity}).subscribe(resp =>{
-        this.showToast('success','Success', "Record updated successfully." )
+    this.http.post(this.apiUrl + 'api/inventory/update-inventory', updatedData).subscribe(resp =>{
+        this.showToast('success','Success', "Record updated successfully." );
+        this.getInventoryList();
     });
   }
 
   ngOnInit(){
+    this.getLookupData();
     this.getInventoryList();
   }
+  getLookupData(){
+    this.http.get(this.apiUrl + 'api/inventory/lookup-data').subscribe((data:any) => {
+          if(data){
+            this.productList = data.products;
+            this.categoryList = data.categories;
+            this.warehouseList = data.warehouses;
+            if(data.products.length > 0){
+              let dataList = data.products.map((val) => {
+                let obj={};
+                obj['value'] = val?.name;
+                obj['title'] = val?.name;
+                return obj;
+              });
+              this.settings.columns.productName.editor.config.list = dataList;
+            }
+            if(data.categories.length > 0){
+              let dataList = data.categories.map((val) => {
+                let obj={};
+                obj['value'] = val?.name;
+                obj['title'] = val?.name;
+                return obj;
+              });
+              this.settings.columns.category.editor.config.list = dataList;
+            }
+            if(data.warehouses.length > 0){
+              let dataList = data.warehouses.map((val) => {
+                let obj={};
+                obj['value'] = val?.warehousE_NAME;
+                obj['title'] = val?.warehousE_NAME;
+                return obj;
+              });
+              this.settings.columns.warehouseName.editor.config.list = dataList;
+            }
+            this.settings = Object.assign({}, this.settings);
+          }
+    });
+  }
   getInventoryList(){
-    this.http.get('/api/inventory-list').subscribe((data:any) => {
+    this.http.get(this.apiUrl + 'api/inventory/inventory-list').subscribe((data:any) => {
           if(data){
             this.source.load(data);
           }
     });
   }
   onCreateConfirm(event): void {
-    const data = event.data;
-    if(data && data.productName && data.category && data.quantity && data.warehouse && !isNaN(+data.quantity) && data.quantity < 0){
-      this.showToast('success','Success', "Record added successfully." ) // need to comment
-      this.http.post('/api/update-inventory', data).subscribe(resp =>{
-        this.showToast('success','Success', "Record added successfully." )
+    const data = event.newData;
+    if(data && data.productName && data.quantity && data.warehouseName && !isNaN(+data.quantity) && data.quantity >= 0){
+      data.productID = event.source.data.find((val) => val['productName'] == data.productName)?.["productID"];
+      data.warehouseID = event.source.data.find((val) => val['warehouseName'] == data.warehouseName)?.["warehouseID"];
+      data.description="";
+      this.http.post(this.apiUrl + 'api/inventory/inventory', data).subscribe(resp =>{
+        this.showToast('success','Success', "Record added successfully." );
+        this.getInventoryList();
+        event.confirm.resolve();
         //display toaster message
       });
     }
@@ -145,7 +212,7 @@ export class SmartTableComponent {
         position: this.position,
         preventDuplicates: this.preventDuplicates,
       };
-      const titleContent = title ? `. ${title}` : '';
+      const titleContent = title ? `${title}` : '';
   
       this.toastrService.show(
         body,

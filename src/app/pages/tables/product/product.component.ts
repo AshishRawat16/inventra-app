@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { LocalDataSource } from 'ng2-smart-table';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -16,8 +16,8 @@ import { SmartTableData } from '../../../@core/data/smart-table';
   templateUrl: './product.component.html',
   styleUrls: ['./product.component.scss'],
 })
-export class ProductComponent {
-
+export class ProductComponent implements OnInit{
+apiUrl:string = "https://localhost:7228/";
   settings = {
     add: {
       addButtonContent: '<i class="nb-plus"></i>',
@@ -37,13 +37,14 @@ export class ProductComponent {
       confirmDelete: true,
     },
     columns: {
-      batchId: {
-        title: 'Product Name',
+      
+      producT_ID: {
+        title: 'Product ID',
         type: 'string',
         editable: false,
         hide: true
       },
-      productName: {
+      name: {
         title: 'Product Name',
         type: 'string',
         editable: false
@@ -51,22 +52,31 @@ export class ProductComponent {
       category: {
         title: 'Category',
         type: 'string',
-        editable: false
+        editable: false,
+        hide: true
       },
-      quantity: {
-        title: 'Quantity',
+      sku: {
+        title: 'SKU',
+        type: 'string'
+      },
+      description: {
+        title: 'Description',
+        type: 'string'
+      },
+      unit: {
+        title: 'Unit',
         type: 'number',
         editable: true
       },
-      status: {
-        title: 'Status',
+      maX_THRESHOLD: {
+        title: 'Max Threshold',
         type: 'string',
-        editable: false
+        editable: true
       },
-      warehouse: {
-        title: 'Warehouse Name',
+      miN_THRESHOLD: {
+        title: 'Max Threshold',
         type: 'string',
-        editable: false
+        editable: true
       }
     },
   };
@@ -79,8 +89,6 @@ export class ProductComponent {
   position: NbGlobalPosition = NbGlobalPhysicalPosition.TOP_RIGHT;
   preventDuplicates = false;
   constructor(private service: SmartTableData, private http : HttpClient, private toastrService: NbToastrService) {
-    const data = this.service.getData();
-    this.source.load(data);
   }
 
   onDeleteConfirm(event): void {
@@ -113,7 +121,26 @@ export class ProductComponent {
   }
 
   ngOnInit(){
-    this.getInventoryList();
+    this.getLookupData()
+    //this.getInventoryList();
+  }
+
+  getLookupData(){
+    this.http.get(this.apiUrl + 'api/inventory/lookup-data').subscribe((data:any) => {
+          if(data){
+            this.source.load(data.products);
+            // if(data.categories.length > 0){
+            //   let dataList = data.categories.map((val) => {
+            //     let obj={};
+            //     obj['value'] = val?.name;
+            //     obj['title'] = val?.name;
+            //     return obj;
+            //   });
+            //   this.settings.columns.category.editor.config.list = dataList;
+            //   this.settings = Object.assign({}, this.settings);
+            // }
+          }
+    });
   }
   getInventoryList(){
     this.http.get('/api/inventory-list').subscribe((data:any) => {
@@ -142,7 +169,7 @@ export class ProductComponent {
         position: this.position,
         preventDuplicates: this.preventDuplicates,
       };
-      const titleContent = title ? `. ${title}` : '';
+      const titleContent = title ? `${title}` : '';
   
       this.toastrService.show(
         body,
