@@ -1,12 +1,39 @@
 <div class="row">
-  <div class="col-xxxl-3 col-md-6" *ngFor="let statusCard of statusCards">
-    <ngx-status-card [title]="statusCard.title" [type]="statusCard.type">
-      <i [ngClass]="statusCard.iconClass"></i>
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Low Stock Items" type="warning" [total]="lowStockValue">
+      <i ngClass="nb-arrow-thin-down"></i>
+    </ngx-status-card>
+  </div>
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Out of Stock Items" type="danger" [total]="expiryValue">
+      <i ngClass="nb-danger"></i>
+    </ngx-status-card>
+  </div>
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Over Stock Items" type="info" [total]="overStockValue">
+      <i ngClass="nb-paper-plane"></i>
+    </ngx-status-card>
+  </div>
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Expiring Items" type="warning" [total]="expiryValue">
+      <i ngClass="nb-danger"></i>
     </ngx-status-card>
   </div>
 </div>
-
 <div class="row">
+  <div class="col-xxxl-3 col-md-6">
+    <ngx-status-card title="Total Products" type="info" [total]="lowStockValue">
+      <i ngClass="nb-e-commerce"></i>
+    </ngx-status-card>
+  </div>
+</div>
+<div class="row">
+  <div class="col-xxl-5">
+    <ngx-user-activity></ngx-user-activity>
+  </div>
+</div>
+
+<!-- <div class="row">
   <div class="col-xxxl-3 col-xxl-4 col-lg-5 col-md-6">
     <ngx-temperature></ngx-temperature>
   </div>
@@ -39,4 +66,4 @@
   <div class="col-xxxl-6 col-xxl-12 col-md-7">
     <ngx-security-cameras></ngx-security-cameras>
   </div>
-</div>
+</div> -->

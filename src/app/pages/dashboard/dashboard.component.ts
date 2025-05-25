@@ -1,12 +1,16 @@
-import {Component, OnDestroy} from '@angular/core';
+import {Component,OnInit, OnDestroy} from '@angular/core';
 import { NbThemeService } from '@nebular/theme';
 import { takeWhile } from 'rxjs/operators' ;
 import { SolarData } from '../../@core/data/solar';
+import { WebSocketService } from '../services/websocket.service';
+import { HttpClient } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 
 interface CardSettings {
   title: string;
   iconClass: string;
   type: string;
+  total: string;
 }
 
 @Component({
@@ -17,28 +21,35 @@ interface CardSettings {
 export class DashboardComponent implements OnDestroy {
 
   private alive = true;
-
+  socketSubscription: Subscription = new Subscription();
   solarValue: number;
+  lowStockValue: string ='0';
+  overStockValue: string ='0';
+  expiryValue: string ='0';
+
   lightCard: CardSettings = {
-    title: 'Light',
-    iconClass: 'nb-lightbulb',
-    type: 'primary',
+    title: 'Low stock items',
+    iconClass: 'nb-arrow-thin-down',
+    type: 'warning',
+    total: ''
   };
   rollerShadesCard: CardSettings = {
-    title: 'Roller Shades',
-    iconClass: 'nb-roller-shades',
-    type: 'success',
+    title: 'Over stock items',
+    iconClass: 'nb-paper-plane',
+    type: 'info',
+    total: ''
   };
   wirelessAudioCard: CardSettings = {
-    title: 'Wireless Audio',
-    iconClass: 'nb-audio',
-    type: 'info',
+    title: 'Expiring Items',
+    iconClass: 'nb-danger',
+    type: 'danger',
+    total: ''
   };
-  coffeeMakerCard: CardSettings = {
-    title: 'Coffee Maker',
-    iconClass: 'nb-coffee-maker',
-    type: 'warning',
-  };
+  // coffeeMakerCard: CardSettings = {
+  //   title: 'Coffee Maker',
+  //   iconClass: 'nb-coffee-maker',
+  //   type: 'warning',
+  // };
 
   statusCards: string;
 
@@ -46,40 +57,24 @@ export class DashboardComponent implements OnDestroy {
     this.lightCard,
     this.rollerShadesCard,
     this.wirelessAudioCard,
-    this.coffeeMakerCard,
+    // this.coffeeMakerCard,
   ];
 
   statusCardsByThemes: {
     default: CardSettings[];
     cosmic: CardSettings[];
-    corporate: CardSettings[];
     dark: CardSettings[];
   } = {
     default: this.commonStatusCardsSet,
     cosmic: this.commonStatusCardsSet,
-    corporate: [
-      {
-        ...this.lightCard,
-        type: 'warning',
-      },
-      {
-        ...this.rollerShadesCard,
-        type: 'primary',
-      },
-      {
-        ...this.wirelessAudioCard,
-        type: 'danger',
-      },
-      {
-        ...this.coffeeMakerCard,
-        type: 'info',
-      },
-    ],
     dark: this.commonStatusCardsSet,
   };
 
   constructor(private themeService: NbThemeService,
-              private solarService: SolarData) {
+              private solarService: SolarData,
+              private websocketService : WebSocketService,
+              private http: HttpClient
+            ) {
     this.themeService.getJsTheme()
       .pipe(takeWhile(() => this.alive))
       .subscribe(theme => {
@@ -93,7 +88,31 @@ export class DashboardComponent implements OnDestroy {
       });
   }
 
+  ngOnInit(){
+    this.getDashboardData();
+    this.socketSubscription = this.websocketService.connect('ws://your-server-url')
+      .subscribe({
+        next: (data: any) => {
+          this.lowStockValue = data?.lowStock;
+          this.overStockValue=data?.overStock;
+          this.expiryValue = data?.expiryStock;
+        },
+        error: (err) => {
+          console.error('WebSocket Error:', err);
+        }
+      });
+  }
+
+  getDashboardData(){
+    this.http.get('/api/metrics-data').subscribe((data:any) => {
+          this.lowStockValue = data?.lowStock;
+          this.overStockValue=data?.overStock;
+          this.expiryValue = data?.expiryStock;
+    });
+  }
   ngOnDestroy() {
     this.alive = false;
+    this.socketSubscription.unsubscribe();
+    this.websocketService.disconnect();
   }
 }

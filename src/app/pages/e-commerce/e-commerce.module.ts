@@ -97,7 +97,6 @@ import { EarningLiveUpdateChartComponent } from './earning-card/front-side/earni
     ECommerceVisitorsAnalyticsChartComponent,
     ECommerceVisitorsStatisticsComponent,
     ECommerceLegendChartComponent,
-    ECommerceUserActivityComponent,
     ECommerceProgressSectionComponent,
     SlideOutComponent,
     EarningCardComponent,

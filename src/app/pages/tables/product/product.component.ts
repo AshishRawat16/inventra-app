@@ -12,11 +12,11 @@ import {
 import { SmartTableData } from '../../../@core/data/smart-table';
 
 @Component({
-  selector: 'ngx-smart-table',
-  templateUrl: './smart-table.component.html',
-  styleUrls: ['./smart-table.component.scss'],
+  selector: 'ngx-product',
+  templateUrl: './product.component.html',
+  styleUrls: ['./product.component.scss'],
 })
-export class SmartTableComponent {
+export class ProductComponent {
 
   settings = {
     add: {
@@ -38,7 +38,7 @@ export class SmartTableComponent {
     },
     columns: {
       batchId: {
-        title: 'Batch Id',
+        title: 'Product Name',
         type: 'string',
         editable: false,
         hide: true
@@ -125,16 +125,13 @@ export class SmartTableComponent {
   onCreateConfirm(event): void {
     const data = event.data;
     if(data && data.productName && data.category && data.quantity && data.warehouse && !isNaN(+data.quantity) && data.quantity < 0){
-      this.showToast('success','Success', "Record added successfully." ) // need to comment
       this.http.post('/api/update-inventory', data).subscribe(resp =>{
         this.showToast('success','Success', "Record added successfully." )
         //display toaster message
       });
     }
-    else{
-      this.showToast('warning','Warning', "Fields cannot be blank" )
-      return;    
-    }
+    this.showToast('warning','Warning', "Fields cannot be blank" )
+    return;    
   }
   private showToast(type: NbComponentStatus, title: string, body: string) {
       const config = {
