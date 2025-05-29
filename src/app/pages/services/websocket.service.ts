@@ -1,34 +1,48 @@
-// websocket.service.ts
 import { Injectable } from '@angular/core';
-import { webSocket } from 'rxjs/webSocket';
+import * as signalR from '@microsoft/signalr';
 import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class WebSocketService {
-
-  private socket$: any;
-
-  constructor() { }
-
-  // Connect to WebSocket server
-  connect(url: string): Observable<any> {
-    this.socket$ = webSocket(url);
-    return this.socket$;
+  private hubConnection: signalR.HubConnection;
+  apiUrl:string = "https://localhost:7228/";
+  constructor() {
+    Object.defineProperty(WebSocket, 'OPEN', { value: 1, });
+    this.hubConnection = new signalR.HubConnectionBuilder()
+      .withUrl(this.apiUrl + 'realtimehub', {
+      // skipNegotiation: true,  // skipNegotiation as we specify WebSockets
+      // transport: signalR.HttpTransportType.WebSockets,  // force WebSocket transport
+      withCredentials: false
+    }).build();
   }
 
-  // Disconnect from WebSocket server
-  disconnect(): void {
-    if (this.socket$) {
-      this.socket$.complete();
-    }
+  startConnection(): Observable<void> {
+    return new Observable<void>((observer) => {
+      this.hubConnection
+        .start()
+        .then(() => {
+          console.log('Connection established with SignalR hub');
+          observer.next();
+          observer.complete();
+        })
+        .catch((error) => {
+          console.error('Error connecting to SignalR hub:', error);
+          observer.error(error);
+        });
+    });
   }
 
-  // Send data through WebSocket
-  send(data: any): void {
-    if (this.socket$) {
-      this.socket$.next(data);
-    }
+  receiveMessage(): Observable<string> {
+    return new Observable<string>((observer) => {
+      this.hubConnection.on('ReceiveMessage', (message: string) => {
+        observer.next(message);
+      });
+    });
+  }
+
+  sendMessage(message: string): void {
+    this.hubConnection.invoke('SendMessage', message);
   }
 }

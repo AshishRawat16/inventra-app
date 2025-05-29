@@ -9,6 +9,7 @@ import {
   NbToastrService,
   NbToastrConfig,
 } from '@nebular/theme';
+import { WebSocketService } from '../../services/websocket.service';
 import { SmartTableData } from '../../../@core/data/smart-table';
 
 @Component({
@@ -101,7 +102,8 @@ export class SmartTableComponent implements OnInit{
   productList:any = [];
   categoryList:any = [];
   warehouseList:any = [];
-  constructor(private service: SmartTableData, private http : HttpClient, private toastrService: NbToastrService) {
+  constructor(private service: SmartTableData, private http : HttpClient, private toastrService: NbToastrService, 
+    private websocketService : WebSocketService,) {
     //const data = this.service.getData();
     //this.source.load(data);
   }
@@ -113,6 +115,7 @@ export class SmartTableComponent implements OnInit{
       this.http.post(this.apiUrl + 'api/inventory/delete-inventory', data).subscribe(resp =>{
         this.showToast('success','Success', "Record deleted successfully." );
         this.getInventoryList();
+        this.websocketService.sendMessage("Update");
       });
     } else {
       event.confirm.reject();
@@ -134,6 +137,7 @@ export class SmartTableComponent implements OnInit{
     this.http.post(this.apiUrl + 'api/inventory/update-inventory', updatedData).subscribe(resp =>{
         this.showToast('success','Success', "Record updated successfully." );
         this.getInventoryList();
+        this.websocketService.sendMessage("Update");
     });
   }
 
@@ -188,12 +192,15 @@ export class SmartTableComponent implements OnInit{
   onCreateConfirm(event): void {
     const data = event.newData;
     if(data && data.productName && data.quantity && data.warehouseName && !isNaN(+data.quantity) && data.quantity >= 0){
-      data.productID = event.source.data.find((val) => val['productName'] == data.productName)?.["productID"];
-      data.warehouseID = event.source.data.find((val) => val['warehouseName'] == data.warehouseName)?.["warehouseID"];
+      data.productID= this.productList.find((val) => val['name'] == data.productName)?.["producT_ID"];
+      //data.productID = event.source.data.find((val) => val['productName'] == data.productName)?.["productID"];
+      data.warehouseID = this.warehouseList.find((val) => val['warehousE_NAME'] == data.warehouseName)?.["warehousE_ID"];
+      //data.warehouseID = event.source.data.find((val) => val['warehouseName'] == data.warehouseName)?.["warehouseID"];
       data.description="";
       this.http.post(this.apiUrl + 'api/inventory/inventory', data).subscribe(resp =>{
         this.showToast('success','Success', "Record added successfully." );
         this.getInventoryList();
+        this.websocketService.sendMessage("Update");
         event.confirm.resolve();
         //display toaster message
       });

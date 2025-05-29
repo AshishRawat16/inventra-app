@@ -68,12 +68,12 @@ apiUrl:string = "https://localhost:7228/";
         type: 'number',
         editable: true
       },
-      maX_THRESHOLD: {
-        title: 'Max Threshold',
+      miN_THRESHOLD: {
+        title: 'Min Threshold',
         type: 'string',
         editable: true
       },
-      miN_THRESHOLD: {
+      maX_THRESHOLD: {
         title: 'Max Threshold',
         type: 'string',
         editable: true
@@ -91,34 +91,7 @@ apiUrl:string = "https://localhost:7228/";
   constructor(private service: SmartTableData, private http : HttpClient, private toastrService: NbToastrService) {
   }
 
-  onDeleteConfirm(event): void {
-    if (window.confirm('Are you sure you want to delete?')) {
-      event.confirm.resolve();
-       const data = event.data;
-      this.http.post('/api/delete-inventory', {'batchId' : data.batchId}).subscribe(resp =>{
-        this.showToast('success','Success', "Record deleted successfully." )
-      });
-    } else {
-      event.confirm.reject();
-    }
-  }
-
-  onSaveConfirm(event): void {
-    const updatedData = event.newData;
-    if(!updatedData.quantity){
-      this.showToast('warning','Warning', "Fields cannot be blank." )
-      //display alert
-      return;
-    }
-    if(!updatedData || isNaN(+updatedData.quantity) || updatedData.quantity < 0){
-      this.showToast('warning','Warning', "Quantity should be numeric and non-negative" )
-      //display alert
-      return;
-    }
-    this.http.post('/api/update-inventory', {'batchId' : updatedData.batchId, 'quantity' : updatedData.quantity}).subscribe(resp =>{
-        this.showToast('success','Success', "Record updated successfully." )
-    });
-  }
+  
 
   ngOnInit(){
     this.getLookupData()
@@ -152,13 +125,44 @@ apiUrl:string = "https://localhost:7228/";
   onCreateConfirm(event): void {
     const data = event.data;
     if(data && data.productName && data.category && data.quantity && data.warehouse && !isNaN(+data.quantity) && data.quantity < 0){
-      this.http.post('/api/update-inventory', data).subscribe(resp =>{
-        this.showToast('success','Success', "Record added successfully." )
-        //display toaster message
-      });
+      this.showToast('success','Success', "Record added successfully." )
+      // this.http.post('/api/update-inventory', data).subscribe(resp =>{
+        
+      //   //display toaster message
+      // });
     }
     this.showToast('warning','Warning', "Fields cannot be blank" )
     return;    
+  }
+  onDeleteConfirm(event): void {
+    if (window.confirm('Are you sure you want to delete?')) {
+      event.confirm.resolve();
+       const data = event.data;
+      this.showToast('success','Success', "Record deleted successfully." );
+      // this.http.post(this.apiUrl + 'api/inventory/delete-inventory', data).subscribe(resp =>{
+      //   this.getInventoryList();
+      // });
+    } else {
+      event.confirm.reject();
+    }
+  }
+
+  onSaveConfirm(event): void {
+    const updatedData = event.newData;
+    if(!updatedData.quantity){
+      this.showToast('warning','Warning', "Fields cannot be blank." )
+      //display alert
+      return;
+    }
+    // if(!updatedData || isNaN(+updatedData.quantity) || updatedData.quantity < 0){
+    //   this.showToast('warning','Warning', "Quantity should be numeric and non-negative" )
+    //   //display alert
+    //   return;
+    // }
+    this.showToast('success','Success', "Record updated successfully." );
+    // this.http.post(this.apiUrl + 'api/inventory/update-inventory', updatedData).subscribe(resp =>{
+    //     this.getInventoryList();
+    // });
   }
   private showToast(type: NbComponentStatus, title: string, body: string) {
       const config = {

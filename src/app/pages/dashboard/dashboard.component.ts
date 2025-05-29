@@ -5,6 +5,14 @@ import { SolarData } from '../../@core/data/solar';
 import { WebSocketService } from '../services/websocket.service';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
+import {
+  NbComponentStatus,
+  NbGlobalLogicalPosition,
+  NbGlobalPhysicalPosition,
+  NbGlobalPosition,
+  NbToastrService,
+  NbToastrConfig,
+} from '@nebular/theme';
 
 interface CardSettings {
   title: string;
@@ -73,11 +81,18 @@ export class DashboardComponent implements OnInit,OnDestroy {
     cosmic: this.commonStatusCardsSet,
     dark: this.commonStatusCardsSet,
   };
+  config: NbToastrConfig;
+  destroyByClick = true;
+  duration = 4000;
+  hasIcon = true;
+  position: NbGlobalPosition = NbGlobalPhysicalPosition.TOP_RIGHT;
+  preventDuplicates = false;
 
   constructor(private themeService: NbThemeService,
               private solarService: SolarData,
               private websocketService : WebSocketService,
-              private http: HttpClient
+              private http: HttpClient,
+              private toastrService: NbToastrService
             ) {
     this.themeService.getJsTheme()
       .pipe(takeWhile(() => this.alive))
@@ -93,8 +108,16 @@ export class DashboardComponent implements OnInit,OnDestroy {
   }
 
     ngOnInit(){
-    this.getDashboardData();
+    this.getDashboardData("");
     this.getNotificationList();
+    this.websocketService.startConnection().subscribe(() => {
+      this.websocketService.receiveMessage().subscribe((message) => {
+        console.log("Real time update triggered.");
+        this.getDashboardData("UPDATE");
+      });
+    });
+
+    
     // this.socketSubscription = this.websocketService.connect('ws://your-server-url')
     //   .subscribe({
     //     next: (data: any) => {
@@ -108,7 +131,23 @@ export class DashboardComponent implements OnInit,OnDestroy {
     //   });
   }
 
-  getDashboardData(){
+  private showToast(type: NbComponentStatus, title: string, body: string) {
+      const config = {
+        status: type,
+        destroyByClick: this.destroyByClick,
+        duration: this.duration,
+        hasIcon: this.hasIcon,
+        position: this.position,
+        preventDuplicates: this.preventDuplicates,
+      };
+      const titleContent = title ? `${title}` : '';
+  
+      this.toastrService.show(
+        body,
+        titleContent,
+        config);
+  }
+  getDashboardData(message: string){
     this.http.get(this.apiUrl + 'api/inventory/dashboard-metrics').subscribe((data:any) => {
           this.lowStockValue = data?.lowStockItems;
           this.overStockValue=data?.overStockItems;
@@ -116,6 +155,9 @@ export class DashboardComponent implements OnInit,OnDestroy {
           this.totalProductsValue = data?.totalProducts;
           this.expiringValue = data?.expiringItems;
           this.expiredValue = data?.expiredItems;
+          if(message){
+            this.showToast('success','Success', "Metrics data updated." );
+          }
     });
   }
   getNotificationList(){
@@ -128,6 +170,5 @@ export class DashboardComponent implements OnInit,OnDestroy {
   ngOnDestroy() {
     this.alive = false;
     this.socketSubscription.unsubscribe();
-    this.websocketService.disconnect();
   }
 }
